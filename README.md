@@ -6,6 +6,14 @@ Nocturna è un'applicazione web immersiva progettata per intrattenere gli utenti
 
 ---
 
+## 🌐 Prova l'App Online
+
+**[Accedi a Nocturna su Vercel](https://nocturna-iota.vercel.app/)** - Nessuna installazione richiesta!
+
+Clicca il link sopra e inizia subito a usare l'app direttamente dal tuo browser.
+
+---
+
 ## ✨ Funzionalità Principali
 
 - **🃏 Tavola Ouija Interattiva** - Poni domande e ricevi risposte che costruiscono tensione progressivamente
