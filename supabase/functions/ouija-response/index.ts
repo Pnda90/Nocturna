@@ -130,9 +130,9 @@ serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      console.error('LOVABLE_API_KEY not configured');
+    const GOOGLE_AI_API_KEY = Deno.env.get('GOOGLE_AI_API_KEY');
+    if (!GOOGLE_AI_API_KEY) {
+      console.error('GOOGLE_AI_API_KEY not configured');
       return new Response(
         JSON.stringify({ error: 'Service temporarily unavailable' }),
         { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -149,45 +149,49 @@ serve(async (req) => {
     
     const systemPrompt = basePrompt + tensionModifier;
 
-    // Build conversation context
-    const messages: { role: string; content: string }[] = [
-      { role: 'system', content: systemPrompt }
-    ];
+    // Build conversation context for Gemini format
+    const contents: { role: string; parts: { text: string }[] }[] = [];
 
     // Add previous conversation for context (limit to last 10 exchanges)
     const recentHistory = conversationHistory.slice(-10);
     for (const entry of recentHistory) {
-      messages.push({ role: 'user', content: `Domanda dalla tavola: "${entry.question}"` });
-      messages.push({ role: 'assistant', content: entry.answer });
+      contents.push({ role: 'user', parts: [{ text: `Domanda dalla tavola: "${entry.question}"` }] });
+      contents.push({ role: 'model', parts: [{ text: entry.answer }] });
     }
 
     // Add current question
-    messages.push({ 
+    contents.push({ 
       role: 'user', 
-      content: language === 'it' 
-        ? `Domanda ${questionCount} dalla tavola ouija: "${question}"`
-        : `Question ${questionCount} from the ouija board: "${question}"`
+      parts: [{ 
+        text: language === 'it' 
+          ? `Domanda ${questionCount} dalla tavola ouija: "${question}"`
+          : `Question ${questionCount} from the ouija board: "${question}"`
+      }]
     });
 
     console.log('Ouija question:', question, 'Language:', language, 'Tension level:', tension.level, 'Question count:', questionCount);
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages,
-        max_tokens: 60,
-        temperature: 0.95,
-      }),
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_AI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemInstruction: {
+            parts: [{ text: systemPrompt }]
+          },
+          contents,
+          generationConfig: {
+            maxOutputTokens: 60,
+            temperature: 0.95,
+          },
+        }),
+      }
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('AI Gateway error:', response.status, errorText);
+      console.error('Gemini API error:', response.status, errorText);
       
       if (response.status === 429) {
         return new Response(
@@ -196,11 +200,11 @@ serve(async (req) => {
         );
       }
       
-      throw new Error(`AI Gateway error: ${response.status}`);
+      throw new Error(`Gemini API error: ${response.status}`);
     }
 
     const data = await response.json();
-    let answer = data.choices?.[0]?.message?.content?.trim() || '';
+    let answer = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
     
     // Clean up the response - ensure uppercase, remove quotes
     answer = answer.replace(/["""]/g, '').toUpperCase().trim();

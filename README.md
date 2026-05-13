@@ -46,6 +46,17 @@ npm run dev
 
 L'app sarà disponibile su `http://localhost:8080`
 
+### Configurazione delle variabili di ambiente
+
+Per far funzionare il frontend e le funzioni Supabase, copia `.env.example` in `.env` e configura le seguenti variabili:
+
+- `VITE_SUPABASE_URL` = URL del progetto Supabase
+- `VITE_SUPABASE_PUBLISHABLE_KEY` = chiave anonima pubblicabile
+- `GOOGLE_AI_API_KEY` = chiave API di Google Generative AI
+- `ALLOWED_ORIGINS` = origini permesse dalle funzioni, ad esempio `http://localhost:8080,https://nocturna-iota.vercel.app`
+
+Le variabili dell'app frontend devono essere impostate anche su Vercel: `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY`.
+
 ---
 
 ## 🛠️ Tecnologie Utilizzate

@@ -159,9 +159,9 @@ serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      console.error('LOVABLE_API_KEY not configured');
+    const GOOGLE_AI_API_KEY = Deno.env.get('GOOGLE_AI_API_KEY');
+    if (!GOOGLE_AI_API_KEY) {
+      console.error('GOOGLE_AI_API_KEY not configured');
       return new Response(
         JSON.stringify({ error: 'Service temporarily unavailable' }),
         { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -210,26 +210,29 @@ Write. Terrify. Hold nothing back.`;
 
     console.log('Generating enhanced horror story with seed:', seed, 'Style:', validStyle, 'Length:', validLength);
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: seedPrompt }
-        ],
-        max_tokens: 4000,
-        temperature: 0.92, // Slightly higher for more creative horror
-      }),
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_AI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemInstruction: {
+            parts: [{ text: systemPrompt }]
+          },
+          contents: [
+            { role: 'user', parts: [{ text: seedPrompt }] }
+          ],
+          generationConfig: {
+            maxOutputTokens: 4000,
+            temperature: 0.92,
+          },
+        }),
+      }
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('AI Gateway error:', response.status, errorText);
+      console.error('Gemini API error:', response.status, errorText);
       
       if (response.status === 429) {
         return new Response(
@@ -238,11 +241,11 @@ Write. Terrify. Hold nothing back.`;
         );
       }
       
-      throw new Error(`AI Gateway error: ${response.status}`);
+      throw new Error(`Gemini API error: ${response.status}`);
     }
 
     const data = await response.json();
-    let story = data.choices?.[0]?.message?.content?.trim() || '';
+    let story = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
     
     // Extract title if present (various quote formats)
     let title = '';
