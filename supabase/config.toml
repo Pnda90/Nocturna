@@ -1,7 +1,0 @@
-project_id = "utzvyogodfaqhhqducqh"
-
-[functions.ouija-response]
-verify_jwt = true
-
-[functions.generate-story]
-verify_jwt = true
