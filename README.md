@@ -3,7 +3,7 @@
 **Un'esperienza interattiva di intrattenimento sovrannaturale.**
 
 Nocturna è un'applicazione web immersiva progettata per intrattenere gli utenti attraverso esperienze interattive basate su temi misteriosi e horror. L'app è puro intrattenimento creativo senza alcuna pretesa di capacità paranormale reali.
-
+-- SVILUPPO IN CORSO --
 ---
 
 ## 🌐 Prova l'App Online
