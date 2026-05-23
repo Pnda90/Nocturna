@@ -23,7 +23,6 @@ export default defineConfig(() => ({
       output: {
         manualChunks: {
           'radix-ui': ['@radix-ui/react-accordion', '@radix-ui/react-alert-dialog', '@radix-ui/react-aspect-ratio'],
-          'supabase': ['@supabase/supabase-js'],
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
         },
       },

@@ -136,8 +136,7 @@ Vedi [LICENSE.md](./LICENSE.md) per i termini completi e le condizioni d'uso.
 
 **‼️ ATTENZIONE**
 
-Questo progetto è in fase di sviluppo. Non rappresenta la versione finale o completa dello stesso. Se vuoi contribuire visita la pagina: indirizzoprogetto.
-
+Questo progetto è in fase di sviluppo. Non rappresenta la versione finale o completa dello stesso. 
 ---
 
 ## ⚖️ Diritti e Utilizzo

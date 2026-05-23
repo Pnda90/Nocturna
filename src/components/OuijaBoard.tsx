@@ -17,7 +17,6 @@ import { SessionLog } from './SessionLog';
 import { ChallengeMode } from './ChallengeMode';
 import { TensionEffects } from './TensionEffects';
 import { motion, AnimatePresence } from 'framer-motion';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
 const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
@@ -193,58 +192,13 @@ export function OuijaBoard() {
     }
 
     try {
-      // Build conversation history from session log
-      const conversationHistory = sessionLog.map(entry => ({
-        question: entry.question,
-        answer: entry.answer
-      }));
+      // Generate local tension-aware response
+      const questionCount = sessionLog.length + 1;
+      const answer = generateLocalResponse(validation.sanitized, language, questionCount);
+      const response = sanitizeOutput(answer);
 
-      // Call the AI-powered ouija response with conversation context
-      const { data, error } = await supabase.functions.invoke('ouija-response', {
-        body: { question: validation.sanitized, language, conversationHistory }
-      });
+      if (audioEnabled) playEntityResponse();
 
-      if (error) {
-        if (import.meta.env.DEV) {
-          console.warn('Ouija API unavailable, using local fallback:', error);
-        }
-        // Fallback: generate a local tension-aware response
-        const questionCount = sessionLog.length + 1;
-        const fallbackAnswer = generateLocalResponse(validation.sanitized, language, questionCount);
-        const response = sanitizeOutput(fallbackAnswer);
-
-        if (audioEnabled) playEntityResponse();
-
-        let ci = 0;
-        for (const char of response) {
-          if (char !== ' ') {
-            await movePlanchetteTo(char, ci);
-            ci++;
-          }
-          setAnswer((prev) => prev + char);
-          await new Promise((resolve) => setTimeout(resolve, 300));
-        }
-        setTimeout(() => setHighlightedChar(null), 500);
-        addSessionEntry(validation.sanitized, response);
-        if (challengeMode) {
-          const { addChallengeEntry } = useAppStore.getState();
-          addChallengeEntry(validation.sanitized, response);
-        }
-        setIsAsking(false);
-        setQuestion('');
-        return;
-      }
-
-      const rawResponse = data?.answer || (language === 'it' ? 'SILENZIO' : 'SILENCE');
-      // Sanitize the response for safe display
-      const response = sanitizeOutput(rawResponse);
-      
-      // Play entity response sound
-      if (audioEnabled) {
-        playEntityResponse();
-      }
-
-      // Animate planchette through each character
       let charIndex = 0;
       for (const char of response) {
         if (char !== ' ') {

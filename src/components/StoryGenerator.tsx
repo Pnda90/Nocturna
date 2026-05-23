@@ -5,7 +5,6 @@ import { isDangerousSeed, StoryLength, StoryStyle } from '@/lib/story-generator'
 import { Copy, RefreshCw, Save, Share2, Trash2, Check, BookOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { checkRateLimit, getRateLimitResetTime, validateStorySeed, sanitizeOutput } from '@/lib/security';
 
 export function StoryGenerator() {
@@ -61,48 +60,17 @@ export function StoryGenerator() {
     setGeneratedStory(null);
     setSaved(false);
 
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-story', {
-        body: { seed: validation.sanitized, style, length, ambiguousEnding, language }
-      });
+    // Simulate a slight delay for better UX
+    await new Promise((resolve) => setTimeout(resolve, 1200));
 
-      if (error) {
-        if (import.meta.env.DEV) {
-          console.error('Story generation error:', error);
-        }
-        // Fallback to demo story when API fails
-        const sanitizedSeed = validation.sanitized;
-        setGeneratedStory({
-          title: language === 'it' ? `"Il Mistero di ${sanitizedSeed}"` : `"The Mystery of ${sanitizedSeed}"`,
-          content: language === 'it' 
-            ? `La notte in cui tutto cambiò, ${sanitizedSeed} non era più lo stesso. Qualcosa di sottile, quasi impercettibile, aveva iniziato a rosicchiare i margini della realtà. Era come se il mondo attorno fosse leggermente sfuocato, come una fotografia non a fuoco.\n\nI giorni passavano, ma il tempo non scorreva normale. Le ore si dilatavano in strani intervalli. Quando chiudeva gli occhi, vedeva cose che non dovrebbero esistere. Ombre che si muovevano con volontà propria, pareti che respiravano, specchi che riflettevano stanze che non aveva mai visto.\n\nE il peggio era il silenzio. Un silenzio che non era veramente silenzio, ma qualcosa di più profondo. Era come se l'universo intero stesse trattenendo il respiro, aspettando che realizzasse qualcosa.\n\nQualcosa che non poteva più ignorare. Qualcosa che era sempre stato lì, in attesa.`
-            : `The night everything changed, ${sanitizedSeed} was no longer the same. Something subtle, almost imperceptible, had begun gnawing at the edges of reality. It was as if the world around was slightly out of focus, like a photograph not quite sharp.\n\nDays passed, but time did not flow normally. Hours dilated into strange intervals. When closing their eyes, they saw things that shouldn't exist. Shadows moving with their own will, walls that breathed, mirrors reflecting rooms they had never seen.\n\nAnd the worst was the silence. A silence that wasn't truly silence, but something deeper. It was as if the entire universe was holding its breath, waiting for them to realize something.\n\nSomething they could no longer ignore. Something that had always been there, waiting.`
-        });
-        toast({
-          title: language === 'it' ? 'Racconto di Demo' : 'Demo Story',
-          description: language === 'it' ? 'Racconto di esempio (la generazione AI non è disponibile al momento)' : 'Example story (AI generation not available right now)',
-        });
-        setIsGenerating(false);
-        return;
-      }
-
-      if (data?.title && data?.content) {
-        // Sanitize AI-generated content before displaying
-        setGeneratedStory({
-          title: sanitizeOutput(data.title),
-          content: sanitizeOutput(data.content),
-        });
-      } else {
-        throw new Error('Invalid response');
-      }
-
-    } catch (err) {
-      console.error('Story generation fetch error:', err);
-      toast({
-        title: language === 'it' ? 'Errore' : 'Error',
-        variant: 'destructive',
-      });
-    }
+    // Generate demo story locally
+    const sanitizedSeed = validation.sanitized;
+    setGeneratedStory({
+      title: language === 'it' ? `"Il Mistero di ${sanitizedSeed}"` : `"The Mystery of ${sanitizedSeed}"`,
+      content: language === 'it' 
+        ? `La notte in cui tutto cambiò, ${sanitizedSeed} non era più lo stesso. Qualcosa di sottile, quasi impercettibile, aveva iniziato a rosicchiare i margini della realtà. Era come se il mondo attorno fosse leggermente sfuocato, come una fotografia non a fuoco.\n\nI giorni passavano, ma il tempo non scorreva normale. Le ore si dilatavano in strani intervalli. Quando chiudeva gli occhi, vedeva cose che non dovrebbero esistere. Ombre che si muovevano con volontà propria, pareti che respiravano, specchi che riflettevano stanze che non aveva mai visto.\n\nE il peggio era il silenzio. Un silenzio che non era veramente silenzio, ma qualcosa di più profondo. Era come se l'universo intero stesse trattenendo il respiro, aspettando che realizzasse qualcosa.\n\nQualcosa che non poteva più ignorare. Qualcosa che era sempre stato lì, in attesa.`
+        : `The night everything changed, ${sanitizedSeed} was no longer the same. Something subtle, almost imperceptible, had begun gnawing at the edges of reality. It was as if the world around was slightly out of focus, like a photograph not quite sharp.\n\nDays passed, but time did not flow normally. Hours dilated into strange intervals. When closing their eyes, they saw things that shouldn't exist. Shadows moving with their own will, walls that breathed, mirrors reflecting rooms they had never seen.\n\nAnd the worst was the silence. A silence that wasn't truly silence, but something deeper. It was as if the entire universe was holding its breath, waiting for them to realize something.\n\nSomething they could no longer ignore. Something that had always been there, waiting.`
+    });
 
     setIsGenerating(false);
   };
