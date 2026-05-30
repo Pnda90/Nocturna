@@ -14,6 +14,14 @@ Clicca il link sopra e inizia subito a usare l'app direttamente dal tuo browser.
 
 ---
 
+## 🤖 Prototipazione Rapida con AgentiPRO
+
+Questo MVP (Minimum Viable Product) è stato ideato e sviluppato in tempi record con l'ausilio di **[AgentiPRO](https://github.com/Pnda90/AgentiPRO)**, un avanzato tool basato su agenti AI (disponibile anch'esso su GitHub). 
+
+Questo progetto nasce anche come "Proof of Concept" per dimostrare concretamente come sia possibile abbattere i tempi di sviluppo e passare da una semplice idea a un'applicazione interattiva complessa in pochissimo tempo grazie all'intelligenza artificiale.
+
+---
+
 ## ✨ Funzionalità Principali
 
 - **🃏 Tavola Ouija Interattiva** - Poni domande e ricevi risposte che costruiscono tensione progressivamente
@@ -124,11 +132,12 @@ Utilizzare l'app consapevolmente e per scopi ricreativi.
 
 ---
 
-## 📄 Licenza
+## 📄 Licenza (Codice Proprietario)
 
-Questo progetto è privato. Tutti i diritti riservati.
+**Questo progetto NON è open source.** Il codice sorgente è proprietario ("Closed Source"). Tutti i diritti sono strettamente riservati.
+Non è consentita in alcun modo la copia, la distribuzione, la modifica, il reverse engineering o l'utilizzo commerciale di questo codice e dei suoi asset.
 
-Vedi [LICENSE.md](./LICENSE.md) per i termini completi e le condizioni d'uso.
+Vedi il file [LICENSE.md](./LICENSE.md) per i termini completi e le condizioni d'uso restrittive.
 
 ---
 
