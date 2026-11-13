@@ -1,7 +1,7 @@
 import { useAppStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
 import { Sparkles, Share2, StopCircle } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 export function ChallengeMode() {
   const {
@@ -158,7 +158,7 @@ export function ChallengeMode() {
           {language === 'it' ? 'Inizia sessione profonda' : 'Start deep session'}
         </span>
       </button>
-      <p className="text-xs text-muted-foreground/60 mt-1">
+      <p className="text-xs text-muted-foreground mt-1">
         {language === 'it' 
           ? 'Dialoga con l\'entità. Più domande fai, più diventa presente.' 
           : 'Dialogue with the entity. The more you ask, the more present it becomes.'}

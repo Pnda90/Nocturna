@@ -32,7 +32,7 @@ export function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8" role="navigation" aria-label="Main navigation">
+          <nav className="hidden md:flex items-center gap-8" role="navigation" aria-label={language === 'it' ? 'Navigazione principale' : 'Main navigation'}>
             {navItems.map((item) => (
               <Link
                 key={item.path}
@@ -60,7 +60,7 @@ export function Header() {
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden flex items-center justify-center w-10 h-10 text-muted-foreground hover:text-foreground transition-colors duration-300"
-              aria-label="Toggle menu"
+              aria-label={language === 'it' ? 'Apri menu' : 'Toggle menu'}
               aria-expanded={mobileMenuOpen}
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -73,7 +73,7 @@ export function Header() {
           <nav 
             className="md:hidden py-4 border-t border-border/30 animate-fade-in"
             role="navigation"
-            aria-label="Mobile navigation"
+            aria-label={language === 'it' ? 'Navigazione mobile' : 'Mobile navigation'}
           >
             <div className="flex flex-col gap-4">
               {navItems.map((item) => (

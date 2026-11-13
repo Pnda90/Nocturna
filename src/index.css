@@ -15,14 +15,14 @@
     --popover: 0 0% 4%;
     --popover-foreground: 0 0% 92%;
 
-    --primary: 142 40% 45%;
+    --primary: 142 40% 53%;
     --primary-foreground: 0 0% 0%;
 
     --secondary: 0 0% 8%;
     --secondary-foreground: 0 0% 75%;
 
     --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 55%;
+    --muted-foreground: 0 0% 68%;
 
     --accent: 142 40% 45%;
     --accent-foreground: 0 0% 0%;
@@ -37,8 +37,8 @@
     --radius: 0.5rem;
 
     /* Custom NOCTURNA tokens */
-    --ghost: 142 30% 50%;
-    --ghost-glow: 142 40% 45%;
+    --ghost: 142 30% 56%;
+    --ghost-glow: 142 40% 53%;
     --ritual: 0 0% 6%;
     --whisper: 0 0% 40%;
     --shadow-dark: 0 0% 2%;
@@ -71,12 +71,12 @@
     --card-foreground: 0 0% 92%;
     --popover: 0 0% 4%;
     --popover-foreground: 0 0% 92%;
-    --primary: 142 40% 45%;
+    --primary: 142 40% 53%;
     --primary-foreground: 0 0% 0%;
     --secondary: 0 0% 8%;
     --secondary-foreground: 0 0% 75%;
     --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 55%;
+    --muted-foreground: 0 0% 68%;
     --accent: 142 40% 45%;
     --accent-foreground: 0 0% 0%;
     --destructive: 0 62% 45%;
@@ -130,6 +130,14 @@
     font-family: var(--font-display);
     font-weight: 400;
     letter-spacing: 0.15em;
+  }
+
+  .ouija-letter-row {
+    grid-template-columns: repeat(13, minmax(0, 1fr));
+  }
+
+  .ouija-number-row {
+    grid-template-columns: repeat(10, minmax(0, 1fr));
   }
 
   .text-ghost {
@@ -275,7 +283,7 @@
   /* Primary ritual button - polished */
   .btn-primary-ritual {
     @apply px-6 py-3 font-ritual text-sm tracking-widest uppercase rounded-lg;
-    @apply bg-primary/15 border border-primary/40 text-primary;
+    @apply bg-primary/20 border border-primary/60 text-primary;
     @apply transition-all duration-500;
     @apply hover:bg-primary/25 hover:border-primary/70;
     @apply focus:outline-none focus:ring-2 focus:ring-primary/50;
@@ -305,7 +313,7 @@
   /* Input ritual */
   .input-ritual {
     @apply w-full bg-ritual border border-border/50 rounded-lg px-4 py-3;
-    @apply text-foreground placeholder:text-muted-foreground/50;
+    @apply text-foreground placeholder:text-muted-foreground/80;
     @apply focus:outline-none focus:border-ghost/50 focus:ring-1 focus:ring-ghost/30;
     @apply transition-all duration-300;
     font-family: var(--font-sans);
@@ -575,15 +583,6 @@
   animation: spiritOrb 6s ease-in-out infinite;
 }
 
-/* Reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
 .tension-border-pulse {
   animation: borderPulse 2s ease-in-out infinite;
 }
@@ -609,4 +608,12 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
 }

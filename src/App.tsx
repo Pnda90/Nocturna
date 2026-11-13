@@ -9,29 +9,48 @@ import OuijaPage from "./pages/OuijaPage";
 import StoriesPage from "./pages/StoriesPage";
 import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
+import { useAppStore } from "@/lib/store";
+import { MotionConfig } from "framer-motion";
+import { useEffect } from "react";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/ouija" element={<OuijaPage />} />
-            <Route path="/stories" element={<StoriesPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </div>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const reduceMotion = useAppStore((state) => state.reduceMotion);
+  const language = useAppStore((state) => state.language);
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
+
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      useAppStore.getState().setReduceMotion(true);
+    }
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <MotionConfig reducedMotion={reduceMotion ? "always" : "user"}>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <div className={`min-h-screen bg-background ${reduceMotion ? "reduce-motion" : ""}`}>
+              <Header />
+              <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/ouija" element={<OuijaPage />} />
+                <Route path="/stories" element={<StoriesPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </div>
+          </BrowserRouter>
+        </MotionConfig>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

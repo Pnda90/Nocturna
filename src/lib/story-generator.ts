@@ -198,80 +198,10 @@ const storyTemplates = {
   },
 };
 
-const seedEnhancements = {
-  it: {
-    place: [
-      'In quel luogo dimenticato, ',
-      'Tra le mura di ',
-      'Nel cuore oscuro di ',
-    ],
-    object: [
-      'L\'oggetto giaceva in attesa, ',
-      'Quando toccai ',
-      'Era stato nascosto per un motivo, ',
-    ],
-    name: [
-      'pronunciarono il nome proibito: ',
-      'Il nome echeggiò nel vuoto: ',
-      'Nessuno osava più dire quel nome: ',
-    ],
-    fear: [
-      'La paura prese forma: ',
-      'Ciò che temevo si materializzò: ',
-      'Il terrore aveva un volto: ',
-    ],
-  },
-  en: {
-    place: [
-      'In that forgotten place, ',
-      'Within the walls of ',
-      'In the dark heart of ',
-    ],
-    object: [
-      'The object lay waiting, ',
-      'When I touched ',
-      'It had been hidden for a reason, ',
-    ],
-    name: [
-      'they spoke the forbidden name: ',
-      'The name echoed in the void: ',
-      'No one dared say that name anymore: ',
-    ],
-    fear: [
-      'The fear took form: ',
-      'What I feared materialized: ',
-      'Terror had a face: ',
-    ],
-  },
-};
-
-function getWordCount(length: StoryLength): { min: number; max: number } {
-  switch (length) {
-    case 'flash':
-      return { min: 300, max: 600 };
-    case 'short':
-      return { min: 800, max: 1200 };
-    case 'medium':
-      return { min: 1500, max: 2200 };
-  }
-}
-
-function generateParagraph(sentences: string[], count: number): string {
-  const selected: string[] = [];
-  const available = [...sentences];
-  
-  for (let i = 0; i < count && available.length > 0; i++) {
-    const index = Math.floor(Math.random() * available.length);
-    selected.push(available.splice(index, 1)[0]);
-  }
-  
-  return selected.join(' ');
-}
-
 export function generateStory(params: StoryParams): { title: string; content: string } {
   const { seed, length, style, ambiguousEnding, language } = params;
   const template = storyTemplates[style][language];
-  const wordTarget = getWordCount(length);
+  const pick = (items: readonly string[]): string => items[Math.floor(Math.random() * items.length)] ?? '';
   
   // Generate title
   const titles = {
@@ -291,30 +221,26 @@ export function generateStory(params: StoryParams): { title: string; content: st
     ],
   };
   
-  const title = titles[language][Math.floor(Math.random() * titles[language].length)];
+  const title = pick(titles[language]);
   
   // Build story
   const paragraphs: string[] = [];
   
-  // Opening with seed integration
-  const enhancements = seedEnhancements[language];
-  const enhancementTypes = Object.keys(enhancements) as Array<keyof typeof enhancements>;
-  const randomEnhancement = enhancementTypes[Math.floor(Math.random() * enhancementTypes.length)];
-  const enhancementPrefix = enhancements[randomEnhancement][Math.floor(Math.random() * enhancements[randomEnhancement].length)];
-  
-  const opening = template.openings[Math.floor(Math.random() * template.openings.length)];
-  paragraphs.push(enhancementPrefix + seed + '. ' + opening);
+  // A neutral introduction works with places, names, objects and fears.
+  const seedIntro = language === 'it'
+    ? `Tutto cominciò con una sola parola: «${seed}». `
+    : `It began with a single word: “${seed}.” `;
+  const opening = pick(template.openings);
+  paragraphs.push(seedIntro + opening);
   
   // Middle paragraphs based on length
-  const middleCount = length === 'flash' ? 2 : length === 'short' ? 4 : 6;
-  for (let i = 0; i < middleCount; i++) {
-    const middle = template.middles[Math.floor(Math.random() * template.middles.length)];
-    paragraphs.push(middle);
-  }
+  const middleCount = length === 'flash' ? 1 : length === 'short' ? 2 : 3;
+  const middleScenes = [...template.middles].sort(() => Math.random() - 0.5);
+  paragraphs.push(...middleScenes.slice(0, middleCount));
   
   // Ending
   const endings = ambiguousEnding ? template.endings.ambiguous : template.endings.closed;
-  paragraphs.push(endings[Math.floor(Math.random() * endings.length)]);
+  paragraphs.push(pick(endings));
   
   return {
     title,

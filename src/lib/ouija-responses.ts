@@ -214,7 +214,11 @@ export function isDangerousQuestion(question: string): boolean {
   return dangerousPatterns.some((pattern) => pattern.test(question));
 }
 
-export function generateOuijaResponse(question: string, language: Language): string {
+function pickResponse(items: readonly string[]): string {
+  return items[Math.floor(Math.random() * items.length)] ?? '';
+}
+
+export function generateOuijaResponse(_question: string, language: Language): string {
   const responses = crypticResponses[language];
   const yesNo = yesNoResponses[language];
   
@@ -222,20 +226,20 @@ export function generateOuijaResponse(question: string, language: Language): str
   
   // 10% chance of YES/NO
   if (random < 0.1) {
-    return yesNo[Math.floor(Math.random() * yesNo.length)];
+    return pickResponse(yesNo);
   }
   
   // 10% chance of letter/number sequence
   if (random < 0.2) {
-    return letterSequences[Math.floor(Math.random() * letterSequences.length)];
+    return pickResponse(letterSequences);
   }
   
   // 80% chance of cryptic response
-  return responses[Math.floor(Math.random() * responses.length)];
+  return pickResponse(responses);
 }
 
 /**
- * Generate a tension-aware local response when the AI backend is unavailable.
+ * Generate a tension-aware local response.
  * Uses question count to determine the tension level and selects responses accordingly.
  */
 export function generateLocalResponse(
@@ -259,15 +263,15 @@ export function generateLocalResponse(
   );
   if (isYesNo && random < 0.2) {
     const yesNo = yesNoResponses[language];
-    return yesNo[Math.floor(Math.random() * yesNo.length)];
+    return pickResponse(yesNo);
   }
 
   // At high tension, occasionally mix in number sequences
   if (questionCount > 8 && random < 0.1) {
-    return letterSequences[Math.floor(Math.random() * letterSequences.length)];
+    return pickResponse(letterSequences);
   }
 
-  return pool[Math.floor(Math.random() * pool.length)];
+  return pickResponse(pool);
 }
 
 export const ritualSteps = {

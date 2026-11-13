@@ -55,9 +55,9 @@ export const translations = {
       seedPlaceholder: 'Un luogo, un oggetto, un nome, una paura...',
       length: 'Lunghezza',
       lengths: {
-        flash: 'Flash (300-600 parole)',
-        short: 'Breve (800-1200 parole)',
-        medium: 'Medio (1500-2200 parole)',
+        flash: 'Flash · 3 scene',
+        short: 'Breve · 4 scene',
+        medium: 'Esteso · 5 scene',
       },
       style: 'Stile',
       styles: {
@@ -175,9 +175,9 @@ export const translations = {
       seedPlaceholder: 'A place, an object, a name, a fear...',
       length: 'Length',
       lengths: {
-        flash: 'Flash (300-600 words)',
-        short: 'Short (800-1200 words)',
-        medium: 'Medium (1500-2200 words)',
+        flash: 'Flash · 3 scenes',
+        short: 'Short · 4 scenes',
+        medium: 'Extended · 5 scenes',
       },
       style: 'Style',
       styles: {

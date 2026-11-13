@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
-import { ChevronDown, ChevronUp, Scroll, Clock } from 'lucide-react';
+import { ChevronDown, Scroll, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export function SessionLog() {

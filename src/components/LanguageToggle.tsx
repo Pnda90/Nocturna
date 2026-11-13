@@ -1,6 +1,5 @@
 import { Globe } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
-import { Language } from '@/lib/i18n';
 
 export function LanguageToggle() {
   const { language, setLanguage } = useAppStore();

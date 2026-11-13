@@ -63,7 +63,7 @@ export function getRemainingRequests(key: string): number {
 }
 
 /**
- * Sanitize text input to prevent XSS
+ * Normalize text input before rendering it as React text.
  * @param input - Raw user input
  * @returns Sanitized string
  */
@@ -72,26 +72,14 @@ export function sanitizeInput(input: string): string {
   
   return input
     .trim()
-    // Remove HTML tags
     .replace(/<[^>]*>/g, '')
-    // Escape dangerous characters
-    .replace(/[<>"'&]/g, (char) => {
-      const escapeMap: Record<string, string> = {
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#x27;',
-        '&': '&amp;',
-      };
-      return escapeMap[char] ?? char;
-    })
-    // Limit length
+    .replace(/[<>]/g, '')
     .substring(0, 500);
 }
 
 /**
  * Sanitize output content for safe display
- * Used for AI-generated stories and ouija responses
+ * Used for locally generated stories and ouija responses
  */
 export function sanitizeOutput(content: string): string {
   if (typeof content !== 'string') return '';

@@ -3,7 +3,6 @@ import { useAppStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
 import { isDangerousQuestion, ritualSteps, generateLocalResponse } from '@/lib/ouija-responses';
 import { 
-  playClick, 
   playHum, 
   playRitual, 
   startAmbientSound, 
@@ -38,13 +37,15 @@ export function OuijaBoard() {
     startSession, 
     endSession, 
     addSessionEntry,
-    sessionLog,
     challengeMode,
     challengeQuestions,
+    effectsIntensity,
+    reduceMotion,
   } = useAppStore();
   
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
+  const [sessionQuestionCount, setSessionQuestionCount] = useState(0);
   const [isAsking, setIsAsking] = useState(false);
   const [ritualStep, setRitualStep] = useState(-1);
   const [showSafetyMessage, setShowSafetyMessage] = useState(false);
@@ -55,16 +56,21 @@ export function OuijaBoard() {
   
   // Calculate tension level based on question count
   const tensionLevel = useMemo(() => {
-    const count = challengeMode ? challengeQuestions.length : sessionLog.length;
+    const count = challengeMode ? challengeQuestions.length : sessionQuestionCount;
     if (count <= 2) return 0;
     if (count <= 5) return 1;
     if (count <= 8) return 2;
     if (count <= 12) return 3;
     return 4;
-  }, [challengeMode, challengeQuestions.length, sessionLog.length]);
+  }, [challengeMode, challengeQuestions.length, sessionQuestionCount]);
+  const visualTensionLevel = reduceMotion ? 0 : effectsIntensity === 'low'
+    ? Math.min(tensionLevel, 1)
+    : effectsIntensity === 'medium' ? Math.min(tensionLevel, 2) : tensionLevel;
   
   const boardRef = useRef<HTMLDivElement>(null);
   const charRefs = useRef<Map<string, HTMLElement>>(new Map());
+  const ritualRunningRef = useRef(false);
+  const ritualCancelledRef = useRef(false);
 
   const setCharRef = useCallback((char: string, element: HTMLElement | null) => {
     if (element) {
@@ -74,12 +80,21 @@ export function OuijaBoard() {
     }
   }, []);
 
-  // Center planchette on mount and start ambient
+  // Keep the planchette centered when the board changes size.
   useEffect(() => {
-    if (boardRef.current) {
-      const rect = boardRef.current.getBoundingClientRect();
+    const board = boardRef.current;
+    if (!board) return;
+    const centerPlanchette = () => {
+      const rect = board.getBoundingClientRect();
       setPlanchettePos({ x: rect.width / 2, y: rect.height / 2 });
-    }
+    };
+    centerPlanchette();
+    const observer = new ResizeObserver(centerPlanchette);
+    observer.observe(board);
+    return () => {
+      ritualCancelledRef.current = true;
+      observer.disconnect();
+    };
   }, []);
 
   // Handle audio ambient based on session and tension
@@ -97,13 +112,12 @@ export function OuijaBoard() {
 
   // Candle flicker effect
   useEffect(() => {
-    if (sessionActive) {
-      const interval = setInterval(() => {
-        setCandleFlicker(prev => !prev);
-      }, 2000 + Math.random() * 3000);
-      return () => clearInterval(interval);
-    }
-  }, [sessionActive]);
+    if (!sessionActive || reduceMotion || effectsIntensity === 'low') return undefined;
+    const interval = setInterval(() => {
+      setCandleFlicker(prev => !prev);
+    }, 2000 + Math.random() * 3000);
+    return () => clearInterval(interval);
+  }, [sessionActive, reduceMotion, effectsIntensity]);
 
   const movePlanchetteTo = useCallback(async (char: string, charIndex: number) => {
     const element = charRefs.current.get(char.toUpperCase());
@@ -122,28 +136,48 @@ export function OuijaBoard() {
         playLetterSound(charIndex);
       }
       
-      await new Promise((resolve) => setTimeout(resolve, 400));
+      await new Promise((resolve) => setTimeout(resolve, reduceMotion ? 80 : 400));
       setIsPlanchetteMoving(false);
     }
-  }, [audioEnabled]);
+  }, [audioEnabled, reduceMotion]);
+
+  const finishRitual = () => {
+    setRitualStep(-1);
+    setSessionQuestionCount(0);
+    ritualRunningRef.current = false;
+    startSession();
+  };
 
   const handleStartSession = async () => {
+    if (ritualRunningRef.current || sessionActive) return;
+    ritualRunningRef.current = true;
+    ritualCancelledRef.current = false;
     if (audioEnabled) {
       playRitual();
+    }
+    if (reduceMotion) {
+      finishRitual();
+      return;
     }
     
     // Show ritual steps
     for (let i = 0; i < ritualSteps[language].length; i++) {
       setRitualStep(i);
-      await new Promise((resolve) => setTimeout(resolve, 2500));
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      if (ritualCancelledRef.current) return;
     }
     
-    setRitualStep(-1);
-    startSession();
+    finishRitual();
+  };
+
+  const handleSkipRitual = () => {
+    ritualCancelledRef.current = true;
+    finishRitual();
   };
 
   const handleEndSession = () => {
     endSession();
+    setSessionQuestionCount(0);
     setAnswer('');
     setHighlightedChar(null);
     if (audioEnabled) {
@@ -193,7 +227,7 @@ export function OuijaBoard() {
 
     try {
       // Generate local tension-aware response
-      const questionCount = sessionLog.length + 1;
+      const questionCount = challengeMode ? challengeQuestions.length + 1 : sessionQuestionCount + 1;
       const answer = generateLocalResponse(validation.sanitized, language, questionCount);
       const response = sanitizeOutput(answer);
 
@@ -206,7 +240,7 @@ export function OuijaBoard() {
           charIndex++;
         }
         setAnswer((prev) => prev + char);
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        await new Promise((resolve) => setTimeout(resolve, reduceMotion ? 60 : 300));
       }
       
       // Clear highlight after finishing
@@ -214,6 +248,7 @@ export function OuijaBoard() {
       
       // Log the session with sanitized question
       addSessionEntry(validation.sanitized, response);
+      setSessionQuestionCount((count) => count + 1);
       
       // If in challenge mode, track it (no limit anymore)
       if (challengeMode) {
@@ -241,7 +276,7 @@ export function OuijaBoard() {
     setHighlightedChar(null);
   };
 
-  const renderCharButton = (char: string, isSpecial: boolean = false, size: 'normal' | 'large' = 'normal') => {
+  const renderCharButton = (char: string, isSpecial: boolean = false) => {
     const isHighlighted = highlightedChar === char;
     return (
       <span
@@ -249,17 +284,14 @@ export function OuijaBoard() {
         ref={(el) => setCharRef(char, el)}
         className={`
           relative flex items-center justify-center
-          font-serif tracking-wider cursor-default
+          font-serif font-semibold tracking-normal cursor-default
           transition-all duration-500
-          ${isSpecial 
-            ? 'px-4 py-2 text-xs md:text-sm tracking-[0.2em] uppercase' 
-            : size === 'large'
-              ? 'w-10 h-10 md:w-12 md:h-12 text-lg md:text-xl'
-              : 'w-8 h-8 md:w-10 md:h-10 text-base md:text-lg'
-          }
+          ${isSpecial
+            ? 'px-1.5 py-2 text-xs sm:px-4 sm:text-sm tracking-[0.12em] sm:tracking-[0.2em] uppercase'
+            : 'w-full min-w-0 aspect-square text-[clamp(0.875rem,3.5vw,1.25rem)]'}
           ${isHighlighted 
             ? 'text-primary scale-125 glow-ghost-text' 
-            : 'text-foreground/60 hover:text-foreground/90'}
+            : 'text-foreground/85 hover:text-foreground'}
         `}
         aria-hidden="true"
       >
@@ -278,9 +310,9 @@ export function OuijaBoard() {
   };
 
   return (
-    <div className={`min-h-screen pt-20 pb-8 px-4 ${tensionLevel >= 3 ? 'tension-flicker' : ''}`}>
+    <div className={`min-h-screen pt-20 pb-8 px-4 ${visualTensionLevel >= 3 ? 'tension-flicker' : ''}`}>
       {/* Tension visual effects overlay */}
-      <TensionEffects tensionLevel={tensionLevel} isActive={sessionActive} />
+      <TensionEffects tensionLevel={visualTensionLevel} isActive={sessionActive} />
       
       <div className="container mx-auto max-w-4xl">
         {/* Title */}
@@ -291,7 +323,7 @@ export function OuijaBoard() {
           transition={{ duration: 0.8 }}
         >
           <h1 className={`font-serif text-4xl md:text-5xl font-light tracking-[0.15em] mb-3 text-foreground/90 ${
-            tensionLevel >= 4 ? 'tension-text-distort tension-shadow-pulse' : ''
+            visualTensionLevel >= 4 ? 'tension-text-distort tension-shadow-pulse' : ''
           }`}>
             {t(language, 'ouija.title')}
           </h1>
@@ -326,6 +358,13 @@ export function OuijaBoard() {
                   {ritualSteps[language][ritualStep]}
                 </motion.p>
               </div>
+              <button
+                type="button"
+                onClick={handleSkipRitual}
+                className="absolute bottom-10 right-6 text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                {language === 'it' ? 'Salta rituale' : 'Skip ritual'}
+              </button>
             </motion.div>
           )}
         </AnimatePresence>
@@ -390,11 +429,11 @@ export function OuijaBoard() {
               bg-gradient-to-b from-[hsl(30,15%,8%)] via-[hsl(25,20%,6%)] to-[hsl(20,15%,4%)]
               border border-primary/20
               shadow-[0_0_60px_rgba(0,0,0,0.8),inset_0_0_100px_rgba(0,0,0,0.5)]
-              p-8 md:p-12
+              p-3 sm:p-6 md:p-12
               transition-all duration-1000
               ${sessionActive ? 'ring-1 ring-primary/10' : ''}
-              ${tensionLevel >= 2 ? 'tension-border-pulse' : ''}
-              ${tensionLevel >= 4 ? 'tension-glitch' : ''}
+              ${visualTensionLevel >= 2 ? 'tension-border-pulse' : ''}
+              ${visualTensionLevel >= 4 ? 'tension-glitch' : ''}
             `}
           >
             {/* Wood grain texture overlay */}
@@ -412,9 +451,9 @@ export function OuijaBoard() {
             <Planchette position={planchettePos} isMoving={isPlanchetteMoving} />
             
             {/* Top decorative row with sun and moon */}
-            <div className="flex justify-between items-center mb-8 px-4">
+            <div className="flex justify-between items-center gap-1 mb-5 sm:mb-8 px-1 sm:px-4">
               <span className="text-2xl text-primary/40">{symbols.sun}</span>
-              <div className="flex gap-8">
+              <div className="flex gap-2 sm:gap-8">
                 {renderCharButton(t(language, 'ouija.yes'), true)}
                 {renderCharButton(t(language, 'ouija.no'), true)}
               </div>
@@ -422,29 +461,31 @@ export function OuijaBoard() {
             </div>
 
             {/* Alphabet arc - first row (A-M) */}
-            <div className="flex flex-wrap justify-center gap-1 md:gap-2 mb-2">
-              {letters.slice(0, 13).map((letter) => renderCharButton(letter, false, 'large'))}
+            <div className="grid ouija-letter-row gap-0.5 sm:gap-1 md:gap-2 mb-2">
+              {letters.slice(0, 13).map((letter) => renderCharButton(letter))}
             </div>
 
             {/* Alphabet arc - second row (N-Z) */}
-            <div className="flex flex-wrap justify-center gap-1 md:gap-2 mb-8">
-              {letters.slice(13).map((letter) => renderCharButton(letter, false, 'large'))}
+            <div className="grid ouija-letter-row gap-0.5 sm:gap-1 md:gap-2 mb-5 sm:mb-8">
+              {letters.slice(13).map((letter) => renderCharButton(letter))}
             </div>
 
             {/* Numbers row with decorative stars */}
-            <div className="flex justify-center items-center gap-1 md:gap-2 mb-8">
-              <span className="text-lg text-primary/30 mr-2">{symbols.star}</span>
-              {numbers.map((num) => renderCharButton(num))}
-              <span className="text-lg text-primary/30 ml-2">{symbols.star}</span>
+            <div className="flex justify-center items-center gap-1 sm:gap-2 mb-5 sm:mb-8">
+              <span className="hidden sm:inline text-lg text-primary/30">{symbols.star}</span>
+              <div className="grid ouija-number-row gap-0.5 sm:gap-1 md:gap-2 w-full max-w-xl">
+                {numbers.map((num) => renderCharButton(num))}
+              </div>
+              <span className="hidden sm:inline text-lg text-primary/30">{symbols.star}</span>
             </div>
 
             {/* Bottom decorative row */}
-            <div className="flex justify-between items-center px-4">
-              <div className="flex items-center gap-3">
+            <div className="flex justify-between items-center gap-2 px-1 sm:px-4">
+              <div className="flex items-center gap-1 sm:gap-3">
                 <span className="text-xl text-primary/30">{symbols.eye}</span>
                 {renderCharButton(t(language, 'ouija.hello'), true)}
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1 sm:gap-3">
                 {renderCharButton(t(language, 'ouija.goodbye'), true)}
                 <span className="text-xl text-primary/30">{symbols.eye}</span>
               </div>
@@ -476,7 +517,7 @@ export function OuijaBoard() {
               placeholder={t(language, 'ouija.questionPlaceholder')}
               disabled={!sessionActive || isAsking}
               className="input-ritual text-center font-serif text-lg md:text-xl tracking-wide py-4"
-              aria-label="Question input"
+              aria-label={language === 'it' ? 'Domanda' : 'Question'}
             />
             {sessionActive && (
               <div className="absolute left-4 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary/50 animate-pulse" />
@@ -494,10 +535,10 @@ export function OuijaBoard() {
                 className="text-center py-8"
               >
               <div className={`inline-block px-8 py-4 border border-primary/20 rounded-lg bg-ritual/50 ${
-                tensionLevel >= 3 ? 'tension-border-pulse' : ''
+                visualTensionLevel >= 3 ? 'tension-border-pulse' : ''
               }`}>
                 <p className={`font-serif text-2xl md:text-4xl text-primary glow-ghost-text tracking-[0.4em] uppercase ${
-                  tensionLevel >= 4 ? 'tension-shadow-pulse' : ''
+                  visualTensionLevel >= 4 ? 'tension-shadow-pulse' : ''
                 }`}>
                   {answer}
                 </p>

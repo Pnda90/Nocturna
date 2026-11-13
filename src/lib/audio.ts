@@ -426,9 +426,9 @@ function createWindNoise(ctx: AudioContext, tensionLevel: number = 0): AudioNode
   const chaosMultiplier = 0.02 + tensionLevel * 0.01;
   for (let i = 0; i < bufferSize; i++) {
     const white = Math.random() * 2 - 1;
-    data[i] = (lastValue + (chaosMultiplier * white)) / 1.02;
-    lastValue = data[i];
-    data[i] *= 3.5 + tensionLevel;
+    const nextValue = (lastValue + (chaosMultiplier * white)) / 1.02;
+    lastValue = nextValue;
+    data[i] = nextValue * (3.5 + tensionLevel);
   }
   
   const noise = ctx.createBufferSource();

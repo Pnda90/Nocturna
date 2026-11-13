@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
-import { isDangerousSeed, StoryLength, StoryStyle } from '@/lib/story-generator';
+import { generateStory, isDangerousSeed, StoryLength, StoryStyle } from '@/lib/story-generator';
 import { Copy, RefreshCw, Save, Share2, Trash2, Check, BookOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
-import { checkRateLimit, getRateLimitResetTime, validateStorySeed, sanitizeOutput } from '@/lib/security';
+import { checkRateLimit, getRateLimitResetTime, validateStorySeed } from '@/lib/security';
 
 export function StoryGenerator() {
   const { language, savedStories, saveStory, deleteStory } = useAppStore();
@@ -15,7 +15,14 @@ export function StoryGenerator() {
   const [style, setStyle] = useState<StoryStyle>('gothic');
   const [ambiguousEnding, setAmbiguousEnding] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedStory, setGeneratedStory] = useState<{ title: string; content: string } | null>(null);
+  const [generatedStory, setGeneratedStory] = useState<{
+    title: string;
+    content: string;
+    seed: string;
+    style: StoryStyle;
+    length: StoryLength;
+    language: typeof language;
+  } | null>(null);
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
   const [showSavedStories, setShowSavedStories] = useState(false);
@@ -60,17 +67,14 @@ export function StoryGenerator() {
     setGeneratedStory(null);
     setSaved(false);
 
-    // Simulate a slight delay for better UX
-    await new Promise((resolve) => setTimeout(resolve, 1200));
-
-    // Generate demo story locally
-    const sanitizedSeed = validation.sanitized;
-    setGeneratedStory({
-      title: language === 'it' ? `"Il Mistero di ${sanitizedSeed}"` : `"The Mystery of ${sanitizedSeed}"`,
-      content: language === 'it' 
-        ? `La notte in cui tutto cambiò, ${sanitizedSeed} non era più lo stesso. Qualcosa di sottile, quasi impercettibile, aveva iniziato a rosicchiare i margini della realtà. Era come se il mondo attorno fosse leggermente sfuocato, come una fotografia non a fuoco.\n\nI giorni passavano, ma il tempo non scorreva normale. Le ore si dilatavano in strani intervalli. Quando chiudeva gli occhi, vedeva cose che non dovrebbero esistere. Ombre che si muovevano con volontà propria, pareti che respiravano, specchi che riflettevano stanze che non aveva mai visto.\n\nE il peggio era il silenzio. Un silenzio che non era veramente silenzio, ma qualcosa di più profondo. Era come se l'universo intero stesse trattenendo il respiro, aspettando che realizzasse qualcosa.\n\nQualcosa che non poteva più ignorare. Qualcosa che era sempre stato lì, in attesa.`
-        : `The night everything changed, ${sanitizedSeed} was no longer the same. Something subtle, almost imperceptible, had begun gnawing at the edges of reality. It was as if the world around was slightly out of focus, like a photograph not quite sharp.\n\nDays passed, but time did not flow normally. Hours dilated into strange intervals. When closing their eyes, they saw things that shouldn't exist. Shadows moving with their own will, walls that breathed, mirrors reflecting rooms they had never seen.\n\nAnd the worst was the silence. A silence that wasn't truly silence, but something deeper. It was as if the entire universe was holding its breath, waiting for them to realize something.\n\nSomething they could no longer ignore. Something that had always been there, waiting.`
+    const story = generateStory({
+      seed: validation.sanitized,
+      length,
+      style,
+      ambiguousEnding,
+      language,
     });
+    setGeneratedStory({ ...story, seed: validation.sanitized, length, style, language });
 
     setIsGenerating(false);
   };
@@ -89,10 +93,10 @@ export function StoryGenerator() {
     saveStory({
       title: generatedStory.title,
       content: generatedStory.content,
-      seed,
-      style,
-      length,
-      language,
+      seed: generatedStory.seed,
+      style: generatedStory.style,
+      length: generatedStory.length,
+      language: generatedStory.language,
     });
     
     setSaved(true);
@@ -144,10 +148,11 @@ export function StoryGenerator() {
           <div className="space-y-6">
             {/* Seed Input */}
             <div>
-              <label className="block text-sm text-muted-foreground mb-2">
+              <label htmlFor="story-seed" className="block text-sm text-muted-foreground mb-2">
                 {t(language, 'stories.seedLabel')}
               </label>
               <input
+                id="story-seed"
                 type="text"
                 value={seed}
                 onChange={(e) => setSeed(e.target.value)}
@@ -160,10 +165,11 @@ export function StoryGenerator() {
             {/* Length & Style */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-muted-foreground mb-2">
+                <label htmlFor="story-length" className="block text-sm text-muted-foreground mb-2">
                   {t(language, 'stories.length')}
                 </label>
                 <select
+                  id="story-length"
                   value={length}
                   onChange={(e) => setLength(e.target.value as StoryLength)}
                   className="select-ritual"
@@ -176,10 +182,11 @@ export function StoryGenerator() {
               </div>
 
               <div>
-                <label className="block text-sm text-muted-foreground mb-2">
+                <label htmlFor="story-style" className="block text-sm text-muted-foreground mb-2">
                   {t(language, 'stories.style')}
                 </label>
                 <select
+                  id="story-style"
                   value={style}
                   onChange={(e) => setStyle(e.target.value as StoryStyle)}
                   className="select-ritual"
@@ -206,6 +213,7 @@ export function StoryGenerator() {
                 }`}
                 role="switch"
                 aria-checked={ambiguousEnding}
+                aria-label={t(language, 'stories.ambiguousEnding')}
               >
                 <span
                   className={`absolute top-1 w-4 h-4 rounded-full transition-all duration-300 ${

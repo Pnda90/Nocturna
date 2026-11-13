@@ -158,9 +158,9 @@ export const useAppStore = create<AppState>()(
       completeChallenge: () => {
         const state = get();
         const lang = state.language;
-        const sign = signs[Math.floor(Math.random() * signs.length)];
+        const sign = signs[Math.floor(Math.random() * signs.length)] ?? '☽';
         const phrases = finalPhrases[lang];
-        const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+        const phrase = phrases[Math.floor(Math.random() * phrases.length)] ?? phrases[0] ?? '';
         
         set({
           challengeMode: false,
@@ -191,17 +191,29 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'nocturna-storage',
-      version: 1,
+      version: 2,
       migrate: (persistedState, version) => {
-        if (version === 0 || !persistedState) {
+        if (version < 2) {
+          const state = (persistedState ?? {}) as Partial<AppState>;
           return {
-            ...persistedState,
-            effectsIntensity: persistedState?.effectsIntensity ?? 'medium',
-            reduceMotion: persistedState?.reduceMotion ?? false,
-          };
+            ...state,
+            effectsIntensity: state.effectsIntensity ?? 'medium',
+            reduceMotion: state.reduceMotion ?? false,
+            sessionActive: false,
+            challengeMode: false,
+          } as AppState;
         }
-        return persistedState;
+        return persistedState as AppState;
       },
+      partialize: (state) => ({
+        language: state.language,
+        audioEnabled: state.audioEnabled,
+        effectsIntensity: state.effectsIntensity,
+        reduceMotion: state.reduceMotion,
+        sessionLog: state.sessionLog,
+        savedStories: state.savedStories,
+        challengeResult: state.challengeResult,
+      }),
     }
   )
 );

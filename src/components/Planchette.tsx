@@ -8,7 +8,7 @@ interface PlanchetteProps {
 export function Planchette({ position, isMoving }: PlanchetteProps) {
   return (
     <motion.div
-      className="absolute pointer-events-none z-20"
+      className="absolute top-0 left-0 pointer-events-none z-20"
       animate={{
         x: position.x - 35,
         y: position.y - 45,

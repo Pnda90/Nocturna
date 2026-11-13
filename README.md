@@ -1,157 +1,46 @@
-# 🌙 Nocturna
+# Nocturna
 
-**Un'esperienza interattiva di intrattenimento sovrannaturale.**
+Nocturna è una web app di intrattenimento horror con una tavola Ouija digitale, una modalità sfida e un generatore locale di racconti. Le risposte e i racconti sono creati nel browser da contenuti predefiniti: non sono comunicazioni paranormali e questa versione non usa servizi di intelligenza artificiale.
 
-Nocturna è un'applicazione web immersiva progettata per intrattenere gli utenti attraverso esperienze interattive basate su temi misteriosi e horror. L'app è puro intrattenimento creativo senza alcuna pretesa di capacità paranormale reali.
--- SVILUPPO IN CORSO --
----
+## Prova l'app
 
-## 🌐 Prova l'App Online
+[Apri Nocturna](https://nocturna-iota.vercel.app/)
 
-**[Accedi a Nocturna su Vercel](https://nocturna-iota.vercel.app/)** - Nessuna installazione richiesta!
+## Funzionalità
 
-Clicca il link sopra e inizia subito a usare l'app direttamente dal tuo browser.
+- Tavola Ouija con risposte locali, animazione della planchette e registro delle domande.
+- Modalità sfida con tensione progressiva e risultato condivisibile.
+- Racconti horror locali con tema, stile, lunghezza e tipo di finale selezionabili.
+- Interfaccia in italiano e inglese, audio opzionale e impostazioni per gli effetti e il movimento.
+- Racconti e registro salvati nel `localStorage` del browser, cancellabili dalle impostazioni.
 
----
+## Sviluppo locale
 
-## 🤖 Prototipazione Rapida con AgentiPRO
-
-Questo MVP (Minimum Viable Product) è stato ideato e sviluppato in tempi record con l'ausilio di **[AgentiPRO](https://github.com/Pnda90/AgentiPRO)**, un avanzato tool basato su agenti AI (disponibile anch'esso su GitHub). 
-
-Questo progetto nasce anche come "Proof of Concept" per dimostrare concretamente come sia possibile abbattere i tempi di sviluppo e passare da una semplice idea a un'applicazione interattiva complessa in pochissimo tempo grazie all'intelligenza artificiale.
-
----
-
-## ✨ Funzionalità Principali
-
-- **🃏 Tavola Ouija Interattiva** - Poni domande e ricevi risposte che costruiscono tensione progressivamente
-- **📖 Generatore di Storie Horror** - Genera racconti horror personalizzati basati su un tema a tua scelta
-- **🎯 Challenge Mode** - Modalità sfida con meccaniche speciali
-- **🌍 Multi-lingua** - Supporto italiano e inglese
-- **🎨 Tema Scuro** - Interfaccia immersiva e atmosferica
-- **🔊 Effetti Audio** - Sonorità ambientali opzionali per un'esperienza più coinvolgente
-
----
-
-## 🚀 Quick Start
-
-### Prerequisiti
-- Node.js 16+ e npm
-
-### Installazione
+Richiede una versione recente di Node.js e npm.
 
 ```sh
-# Clona il repository
-git clone <YOUR_GIT_URL>
-cd nocturna-main
-
-# Installa le dipendenze
 npm install
-
-# Avvia il server di sviluppo
 npm run dev
 ```
 
-L'app sarà disponibile su `http://localhost:8080`
-
-### Configurazione delle variabili di ambiente
-
-Per far funzionare il frontend e le funzioni Supabase, copia `.env.example` in `.env` e configura le seguenti variabili:
-
-- `VITE_SUPABASE_URL` = URL del progetto Supabase
-- `VITE_SUPABASE_PUBLISHABLE_KEY` = chiave anonima pubblicabile
-- `GOOGLE_AI_API_KEY` = chiave API di Google Generative AI
-- `ALLOWED_ORIGINS` = origini permesse dalle funzioni, ad esempio `http://localhost:8080,https://nocturna-iota.vercel.app`
-
-Le variabili dell'app frontend devono essere impostate anche su Vercel: `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY`.
-
----
-
-## 🛠️ Tecnologie Utilizzate
-
-- **Vite** - Build tool veloce e moderno
-- **React 18** - UI framework
-- **TypeScript** - Type safety
-- **Tailwind CSS** - Styling utility-first
-- **shadcn/ui** - Componenti UI di qualità
-- **Zustand** - State management
-- **Supabase** - Backend e edge functions
-- **Framer Motion** - Animazioni fluide
-
----
-
-## 📁 Struttura Progetto
-
-```
-src/
-├── components/       # Componenti React
-├── pages/           # Pagine dell'app
-├── lib/             # Utility e logica
-├── hooks/           # Custom React hooks
-└── integrations/    # Integrazioni (Supabase)
-
-supabase/
-└── functions/       # Edge functions serverless
-```
-
----
-
-## 🧑‍💻 Sviluppo
+Il server di sviluppo usa `http://localhost:8080`. Per verificare la build:
 
 ```sh
-# Linting
 npm run lint
-
-# Build per produzione
 npm run build
-
-# Preview della build
 npm run preview
 ```
 
----
+La versione attuale non richiede variabili d'ambiente. Le funzioni di generazione sono in `src/lib/ouija-responses.ts` e `src/lib/story-generator.ts`.
 
-## 🔒 Sicurezza
+## Tecnologie
 
-L'applicazione implementa best practices di sicurezza:
-- TypeScript strict mode
-- Input validation su tutti gli endpoint
-- JWT verification abilitato
-- CORS ristretto
-- Environment variables protette
+React, TypeScript, Vite, Tailwind CSS, Zustand e Framer Motion.
 
-Vedi il file `.env.example` per la configurazione delle variabili d'ambiente richieste.
+## Origine del progetto
 
----
+Il primo MVP è stato prototipato con [AgentiPRO](https://github.com/Pnda90/AgentiPRO), come prova di sviluppo rapido assistito da agenti.
 
-## 📝 Disclaimer
+## Nota sul progetto
 
-**Nocturna è un'applicazione di puro intrattenimento.** Non contiene pretese di vera capacità paranormale, predizione del futuro o comunicazione sovrannaturale. Le risposte generate sono create tramite intelligenza artificiale e non hanno alcun significato reale o predittivo.
-
-Utilizzare l'app consapevolmente e per scopi ricreativi.
-
----
-
-## 📄 Licenza (Codice Proprietario)
-
-**Questo progetto NON è open source.** Il codice sorgente è proprietario ("Closed Source"). Tutti i diritti sono strettamente riservati.
-Non è consentita in alcun modo la copia, la distribuzione, la modifica, il reverse engineering o l'utilizzo commerciale di questo codice e dei suoi asset.
-
-Vedi il file [LICENSE.md](./LICENSE.md) per i termini completi e le condizioni d'uso restrittive.
-
----
-
-## ⚠️ Avviso di Sviluppo
-
-**‼️ ATTENZIONE**
-
-Questo progetto è in fase di sviluppo. Non rappresenta la versione finale o completa dello stesso. 
----
-
-## ⚖️ Diritti e Utilizzo
-
-Tutti i diritti derivanti dall'utilizzo di questa applicazione, inclusi ma non limitati ai dati, contenuti e funzionalità, sono di esclusiva proprietà dell'autore. L'applicazione è fornita "così com'è" senza garanzie di alcun tipo. L'autore non è responsabile per danni derivanti dall'uso dell'applicazione.
-
----
-
-**Creato con ✨ e un po' di mistero. Buon divertimento!**
+Nocturna è ancora in sviluppo. Il codice e gli asset sono proprietari; consultare [LICENSE.md](./LICENSE.md) per i termini d'uso.

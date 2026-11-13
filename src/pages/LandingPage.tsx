@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/lib/store';
-import { t } from '@/lib/i18n';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const onboardingMessages = {
@@ -27,33 +26,43 @@ export default function LandingPage() {
   const [step, setStep] = useState(0);
   const [showContent, setShowContent] = useState(false);
 
+  const skipOnboarding = () => {
+    localStorage.setItem('nocturna-onboarding', 'true');
+    setShowContent(true);
+  };
+
   useEffect(() => {
     // Check if user has seen onboarding
     const hasSeenOnboarding = localStorage.getItem('nocturna-onboarding');
     
-    if (hasSeenOnboarding) {
+    if (hasSeenOnboarding || reduceMotion) {
+      if (reduceMotion) localStorage.setItem('nocturna-onboarding', 'true');
       setShowContent(true);
       return;
     }
 
     // Show onboarding sequence
     const messages = onboardingMessages[language];
+    let completionTimer: ReturnType<typeof setTimeout>;
     const timer = setInterval(() => {
       setStep((prev) => {
         if (prev >= messages.length - 1) {
           clearInterval(timer);
-          setTimeout(() => {
+          completionTimer = setTimeout(() => {
             localStorage.setItem('nocturna-onboarding', 'true');
             setShowContent(true);
-          }, 2000);
+          }, 1000);
           return prev;
         }
         return prev + 1;
       });
-    }, 2500);
+    }, 1600);
 
-    return () => clearInterval(timer);
-  }, [language]);
+    return () => {
+      clearInterval(timer);
+      clearTimeout(completionTimer);
+    };
+  }, [language, reduceMotion]);
 
   const handleEnter = () => {
     navigate('/ouija');
@@ -74,6 +83,13 @@ export default function LandingPage() {
             {onboardingMessages[language][step]}
           </motion.p>
         </AnimatePresence>
+        <button
+          type="button"
+          onClick={skipOnboarding}
+          className="absolute bottom-10 right-6 z-10 text-sm text-muted-foreground hover:text-foreground underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        >
+          {language === 'it' ? 'Salta introduzione' : 'Skip introduction'}
+        </button>
       </div>
     );
   }
@@ -151,7 +167,7 @@ export default function LandingPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: reduceMotion ? 0 : 2, duration: reduceMotion ? 0.1 : 0.8 }}
-          className="text-muted-foreground/50 text-xs mt-16 max-w-md mx-auto"
+          className="text-muted-foreground text-xs mt-16 max-w-md mx-auto"
         >
           {language === 'it'
             ? 'Esperienza di intrattenimento. Nessuna garanzia di contatto con entità.'

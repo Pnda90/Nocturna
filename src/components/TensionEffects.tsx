@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAppStore } from '@/lib/store';
 
 interface TensionEffectsProps {
   tensionLevel: number; // 0-4
@@ -7,6 +8,7 @@ interface TensionEffectsProps {
 }
 
 export function TensionEffects({ tensionLevel, isActive }: TensionEffectsProps) {
+  const language = useAppStore((state) => state.language);
   const [showFlash, setShowFlash] = useState(false);
   const [glitchText, setGlitchText] = useState<string | null>(null);
 
@@ -28,7 +30,7 @@ export function TensionEffects({ tensionLevel, isActive }: TensionEffectsProps) 
   useEffect(() => {
     if (!isActive || tensionLevel < 4) return;
     
-    const glitchMessages = [
+    const glitchMessages = language === 'it' ? [
       'NON VOLTARTI',
       'SONO QUI',
       'TI VEDO',
@@ -37,20 +39,29 @@ export function TensionEffects({ tensionLevel, isActive }: TensionEffectsProps) 
       'ASCOLTA',
       '...',
       'SEI SOLO?',
+    ] : [
+      'DON\'T TURN AROUND',
+      'I AM HERE',
+      'I SEE YOU',
+      'BEHIND YOU',
+      'TOO LATE',
+      'LISTEN',
+      '...',
+      'ARE YOU ALONE?',
     ];
     
     const interval = setInterval(() => {
       if (Math.random() < 0.4) {
         const msg = glitchMessages[Math.floor(Math.random() * glitchMessages.length)];
-        setGlitchText(msg);
+        setGlitchText(msg ?? '...');
         setTimeout(() => setGlitchText(null), 800 + Math.random() * 400);
       }
     }, 8000 + Math.random() * 7000);
     
     return () => clearInterval(interval);
-  }, [isActive, tensionLevel]);
+  }, [isActive, tensionLevel, language]);
 
-  if (!isActive) return null;
+  if (!isActive || tensionLevel === 0) return null;
 
   return (
     <>

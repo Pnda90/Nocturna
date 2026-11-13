@@ -1,5 +1,5 @@
 import { useAppStore } from '@/lib/store';
-import { t, Language } from '@/lib/i18n';
+import { t } from '@/lib/i18n';
 import { EffectsIntensity } from '@/lib/store';
 import { toast } from '@/hooks/use-toast';
 import { Trash2 } from 'lucide-react';
@@ -75,6 +75,7 @@ export function SettingsPage() {
                 }`}
                 role="switch"
                 aria-checked={audioEnabled}
+                aria-label={t(language, 'settings.audio')}
               >
                 <span
                   className={`absolute top-1 w-5 h-5 rounded-full transition-all duration-300 ${
@@ -121,6 +122,7 @@ export function SettingsPage() {
                 }`}
                 role="switch"
                 aria-checked={reduceMotion}
+                aria-label={t(language, 'settings.reduceMotion')}
               >
                 <span
                   className={`absolute top-1 w-5 h-5 rounded-full transition-all duration-300 ${
