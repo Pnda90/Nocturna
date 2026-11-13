@@ -88,7 +88,9 @@ export const translations = {
       audio: 'Audio',
       audioOn: 'Attivo',
       audioOff: 'Disattivo',
-      effectsIntensity: 'Intensità effetti',
+      audioVolume: 'Volume audio',
+      audioPreview: 'Prova audio',
+      effectsIntensity: 'Intensità effetti visivi',
       effects: {
         low: 'Bassa',
         medium: 'Media',
@@ -208,7 +210,9 @@ export const translations = {
       audio: 'Audio',
       audioOn: 'On',
       audioOff: 'Off',
-      effectsIntensity: 'Effects intensity',
+      audioVolume: 'Audio volume',
+      audioPreview: 'Test sound',
+      effectsIntensity: 'Visual effects intensity',
       effects: {
         low: 'Low',
         medium: 'Medium',

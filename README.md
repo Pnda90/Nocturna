@@ -8,10 +8,10 @@ Nocturna è una web app di intrattenimento horror con una tavola Ouija digitale,
 
 ## Funzionalità
 
-- Tavola Ouija con risposte locali, animazione della planchette e registro delle domande.
+- Tavola Ouija con risposte locali legate alla domanda, un filo narrativo per sessione, animazione della planchette e registro delle domande.
 - Modalità sfida con tensione progressiva e risultato condivisibile.
 - Racconti horror locali con tema, stile, lunghezza e tipo di finale selezionabili.
-- Interfaccia in italiano e inglese, audio opzionale e impostazioni per gli effetti e il movimento.
+- Interfaccia in italiano e inglese, paesaggio sonoro procedurale opzionale, controllo del volume e impostazioni per gli effetti e il movimento.
 - Racconti e registro salvati nel `localStorage` del browser, cancellabili dalle impostazioni.
 
 ## Sviluppo locale

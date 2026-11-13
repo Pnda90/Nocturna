@@ -3,6 +3,7 @@ import { t } from '@/lib/i18n';
 import { EffectsIntensity } from '@/lib/store';
 import { toast } from '@/hooks/use-toast';
 import { Trash2 } from 'lucide-react';
+import { playClick, playEntityResponse, setAudioPreferences, unlockAudio } from '@/lib/audio';
 
 export function SettingsPage() {
   const {
@@ -10,6 +11,8 @@ export function SettingsPage() {
     setLanguage,
     audioEnabled,
     setAudioEnabled,
+    audioVolume,
+    setAudioVolume,
     effectsIntensity,
     setEffectsIntensity,
     reduceMotion,
@@ -69,7 +72,14 @@ export function SettingsPage() {
             <div className="flex items-center justify-between">
               <span className="text-foreground">{t(language, 'settings.audio')}</span>
               <button
-                onClick={() => setAudioEnabled(!audioEnabled)}
+                onClick={() => {
+                  setAudioPreferences(!audioEnabled, audioVolume);
+                  if (!audioEnabled) {
+                    unlockAudio();
+                    playClick();
+                  }
+                  setAudioEnabled(!audioEnabled);
+                }}
                 className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${
                   audioEnabled ? 'bg-primary/30' : 'bg-muted'
                 }`}
@@ -87,6 +97,32 @@ export function SettingsPage() {
             <p className="text-xs text-muted-foreground mt-2">
               {audioEnabled ? t(language, 'settings.audioOn') : t(language, 'settings.audioOff')}
             </p>
+            <div className="mt-5 flex items-center gap-4">
+              <label htmlFor="audio-volume" className="text-sm text-muted-foreground shrink-0">
+                {t(language, 'settings.audioVolume')}
+              </label>
+              <input
+                id="audio-volume"
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={audioVolume}
+                onChange={(event) => setAudioVolume(Number(event.target.value))}
+                className="w-full accent-primary"
+              />
+              <span className="text-xs text-muted-foreground w-9 text-right tabular-nums">
+                {Math.round(audioVolume * 100)}%
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={playEntityResponse}
+              disabled={!audioEnabled}
+              className="mt-4 text-sm text-primary underline underline-offset-4 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {t(language, 'settings.audioPreview')}
+            </button>
           </div>
 
           {/* Effects Intensity */}

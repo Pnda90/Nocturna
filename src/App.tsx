@@ -12,12 +12,19 @@ import NotFound from "./pages/NotFound";
 import { useAppStore } from "@/lib/store";
 import { MotionConfig } from "framer-motion";
 import { useEffect } from "react";
+import { setAudioPreferences } from "@/lib/audio";
 
 const queryClient = new QueryClient();
 
 const App = () => {
   const reduceMotion = useAppStore((state) => state.reduceMotion);
   const language = useAppStore((state) => state.language);
+  const audioEnabled = useAppStore((state) => state.audioEnabled);
+  const audioVolume = useAppStore((state) => state.audioVolume);
+
+  useEffect(() => {
+    setAudioPreferences(audioEnabled, audioVolume);
+  }, [audioEnabled, audioVolume]);
 
   useEffect(() => {
     document.documentElement.lang = language;

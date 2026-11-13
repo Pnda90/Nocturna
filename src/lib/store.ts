@@ -34,6 +34,7 @@ interface AppState {
   // Settings
   language: Language;
   audioEnabled: boolean;
+  audioVolume: number;
   effectsIntensity: EffectsIntensity;
   reduceMotion: boolean;
   
@@ -53,6 +54,7 @@ interface AppState {
   // Actions
   setLanguage: (lang: Language) => void;
   setAudioEnabled: (enabled: boolean) => void;
+  setAudioVolume: (volume: number) => void;
   setEffectsIntensity: (intensity: EffectsIntensity) => void;
   setReduceMotion: (reduce: boolean) => void;
   
@@ -97,6 +99,7 @@ export const useAppStore = create<AppState>()(
       // Initial state
       language: getDefaultLanguage(),
       audioEnabled: false,
+      audioVolume: 0.55,
       effectsIntensity: 'medium',
       reduceMotion: false,
       sessionActive: false,
@@ -110,6 +113,7 @@ export const useAppStore = create<AppState>()(
       // Settings actions
       setLanguage: (lang) => set({ language: lang }),
       setAudioEnabled: (enabled) => set({ audioEnabled: enabled }),
+      setAudioVolume: (nextVolume) => set({ audioVolume: Math.max(0, Math.min(1, nextVolume)) }),
       setEffectsIntensity: (intensity) => set({ effectsIntensity: intensity }),
       setReduceMotion: (reduce) => set({ reduceMotion: reduce }),
       
@@ -191,14 +195,15 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'nocturna-storage',
-      version: 2,
+      version: 3,
       migrate: (persistedState, version) => {
-        if (version < 2) {
+        if (version < 3) {
           const state = (persistedState ?? {}) as Partial<AppState>;
           return {
             ...state,
             effectsIntensity: state.effectsIntensity ?? 'medium',
             reduceMotion: state.reduceMotion ?? false,
+            audioVolume: state.audioVolume ?? 0.55,
             sessionActive: false,
             challengeMode: false,
           } as AppState;
@@ -208,6 +213,7 @@ export const useAppStore = create<AppState>()(
       partialize: (state) => ({
         language: state.language,
         audioEnabled: state.audioEnabled,
+        audioVolume: state.audioVolume,
         effectsIntensity: state.effectsIntensity,
         reduceMotion: state.reduceMotion,
         sessionLog: state.sessionLog,

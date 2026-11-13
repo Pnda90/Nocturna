@@ -1,16 +1,19 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useAppStore } from '@/lib/store';
 import { t } from '@/lib/i18n';
-import { isDangerousQuestion, ritualSteps, generateLocalResponse } from '@/lib/ouija-responses';
+import { createOuijaNarrativeState, generateNarrativeResponse, isDangerousQuestion, ritualSteps } from '@/lib/ouija-responses';
 import { 
   playHum, 
   playRitual, 
   startAmbientSound, 
   stopAmbientSound,
+  updateTensionAudio,
   playEntityResponse,
-  playLetterSound
+  playIntrusion,
+  playLetterSound,
+  playAnswerComplete,
 } from '@/lib/audio';
-import { checkRateLimit, getRateLimitResetTime, validateOuijaQuestion, sanitizeOutput } from '@/lib/security';
+import { checkRateLimit, getRateLimitResetTime, validateOuijaQuestion } from '@/lib/security';
 import { Planchette } from './Planchette';
 import { SessionLog } from './SessionLog';
 import { ChallengeMode } from './ChallengeMode';
@@ -45,6 +48,7 @@ export function OuijaBoard() {
   
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
+  const [announcedAnswer, setAnnouncedAnswer] = useState('');
   const [sessionQuestionCount, setSessionQuestionCount] = useState(0);
   const [isAsking, setIsAsking] = useState(false);
   const [ritualStep, setRitualStep] = useState(-1);
@@ -68,9 +72,12 @@ export function OuijaBoard() {
     : effectsIntensity === 'medium' ? Math.min(tensionLevel, 2) : tensionLevel;
   
   const boardRef = useRef<HTMLDivElement>(null);
+  const answerRef = useRef<HTMLDivElement>(null);
   const charRefs = useRef<Map<string, HTMLElement>>(new Map());
   const ritualRunningRef = useRef(false);
   const ritualCancelledRef = useRef(false);
+  const narrativeRef = useRef(createOuijaNarrativeState());
+  const responseRunRef = useRef(0);
 
   const setCharRef = useCallback((char: string, element: HTMLElement | null) => {
     if (element) {
@@ -93,6 +100,7 @@ export function OuijaBoard() {
     observer.observe(board);
     return () => {
       ritualCancelledRef.current = true;
+      responseRunRef.current += 1;
       observer.disconnect();
     };
   }, []);
@@ -100,7 +108,7 @@ export function OuijaBoard() {
   // Handle audio ambient based on session and tension
   useEffect(() => {
     if (sessionActive && audioEnabled) {
-      startAmbientSound(tensionLevel);
+      startAmbientSound(0);
     } else {
       stopAmbientSound();
     }
@@ -108,6 +116,10 @@ export function OuijaBoard() {
     return () => {
       stopAmbientSound();
     };
+  }, [sessionActive, audioEnabled]);
+
+  useEffect(() => {
+    if (sessionActive && audioEnabled) updateTensionAudio(tensionLevel);
   }, [sessionActive, audioEnabled, tensionLevel]);
 
   // Candle flicker effect
@@ -120,7 +132,8 @@ export function OuijaBoard() {
   }, [sessionActive, reduceMotion, effectsIntensity]);
 
   const movePlanchetteTo = useCallback(async (char: string, charIndex: number) => {
-    const element = charRefs.current.get(char.toUpperCase());
+    const normalizedChar = char.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+    const element = charRefs.current.get(normalizedChar);
     if (element && boardRef.current) {
       const boardRect = boardRef.current.getBoundingClientRect();
       const charRect = element.getBoundingClientRect();
@@ -129,14 +142,14 @@ export function OuijaBoard() {
       const y = charRect.top - boardRect.top + charRect.height / 2;
       
       setPlanchettePos({ x, y });
-      setHighlightedChar(char.toUpperCase());
+      setHighlightedChar(normalizedChar);
       setIsPlanchetteMoving(true);
       
       if (audioEnabled) {
         playLetterSound(charIndex);
       }
       
-      await new Promise((resolve) => setTimeout(resolve, reduceMotion ? 80 : 400));
+      await new Promise((resolve) => setTimeout(resolve, reduceMotion ? 45 : 260));
       setIsPlanchetteMoving(false);
     }
   }, [audioEnabled, reduceMotion]);
@@ -144,6 +157,7 @@ export function OuijaBoard() {
   const finishRitual = () => {
     setRitualStep(-1);
     setSessionQuestionCount(0);
+    narrativeRef.current = createOuijaNarrativeState();
     ritualRunningRef.current = false;
     startSession();
   };
@@ -178,7 +192,9 @@ export function OuijaBoard() {
   const handleEndSession = () => {
     endSession();
     setSessionQuestionCount(0);
+    narrativeRef.current = createOuijaNarrativeState();
     setAnswer('');
+    setAnnouncedAnswer('');
     setHighlightedChar(null);
     if (audioEnabled) {
       stopAmbientSound();
@@ -220,31 +236,49 @@ export function OuijaBoard() {
     
     setIsAsking(true);
     setAnswer('');
+    setAnnouncedAnswer('');
+    const responseRun = ++responseRunRef.current;
     
     if (audioEnabled) {
       playHum();
     }
 
     try {
-      // Generate local tension-aware response
+      // Keep one narrative thread for the entire session.
       const questionCount = challengeMode ? challengeQuestions.length + 1 : sessionQuestionCount + 1;
-      const answer = generateLocalResponse(validation.sanitized, language, questionCount);
-      const response = sanitizeOutput(answer);
+      const reply = generateNarrativeResponse(
+        validation.sanitized, language, questionCount, narrativeRef.current,
+      );
+      const response = reply.answer;
+      narrativeRef.current = reply.state;
 
-      if (audioEnabled) playEntityResponse();
+      await new Promise((resolve) => setTimeout(resolve, reduceMotion ? 80 : 520));
+      if (responseRun !== responseRunRef.current) return;
+      if (audioEnabled) {
+        if (reply.intrusion) playIntrusion();
+        else playEntityResponse();
+      }
 
       let charIndex = 0;
       for (const char of response) {
-        if (char !== ' ') {
+        if (responseRun !== responseRunRef.current) return;
+        if (/[A-Za-z0-9À-ÿ]/.test(char)) {
           await movePlanchetteTo(char, charIndex);
           charIndex++;
+        } else {
+          await new Promise((resolve) => setTimeout(resolve, reduceMotion ? 25 : char === ' ' ? 100 : 280));
         }
+        if (responseRun !== responseRunRef.current) return;
         setAnswer((prev) => prev + char);
-        await new Promise((resolve) => setTimeout(resolve, reduceMotion ? 60 : 300));
       }
       
       // Clear highlight after finishing
       setTimeout(() => setHighlightedChar(null), 500);
+      setAnnouncedAnswer(response);
+      if (audioEnabled) playAnswerComplete();
+      window.setTimeout(() => {
+        answerRef.current?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
+      }, 160);
       
       // Log the session with sanitized question
       addSessionEntry(validation.sanitized, response);
@@ -258,7 +292,7 @@ export function OuijaBoard() {
 
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.error('Ouija fetch error:', err);
+        console.error('Ouija response error:', err);
       }
       toast({
         title: language === 'it' ? 'Errore' : 'Error',
@@ -273,6 +307,7 @@ export function OuijaBoard() {
   const handleClear = () => {
     setQuestion('');
     setAnswer('');
+    setAnnouncedAnswer('');
     setHighlightedChar(null);
   };
 
@@ -528,16 +563,17 @@ export function OuijaBoard() {
           <AnimatePresence mode="wait">
             {answer && (
               <motion.div
+                ref={answerRef}
                 initial={{ opacity: 0, y: 10, filter: 'blur(10px)' }}
                 animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                 exit={{ opacity: 0, filter: 'blur(10px)' }}
                 transition={{ duration: 0.5 }}
                 className="text-center py-8"
               >
-              <div className={`inline-block px-8 py-4 border border-primary/20 rounded-lg bg-ritual/50 ${
+              <div className={`inline-block px-4 sm:px-8 py-4 border border-primary/20 rounded-lg bg-ritual/50 ${
                 visualTensionLevel >= 3 ? 'tension-border-pulse' : ''
               }`}>
-                <p className={`font-serif text-2xl md:text-4xl text-primary glow-ghost-text tracking-[0.4em] uppercase ${
+                <p aria-hidden="true" className={`font-serif text-2xl md:text-4xl text-primary glow-ghost-text tracking-[0.08em] sm:tracking-[0.16em] md:tracking-[0.3em] uppercase break-words max-w-[85vw] ${
                   visualTensionLevel >= 4 ? 'tension-shadow-pulse' : ''
                 }`}>
                   {answer}
@@ -546,6 +582,7 @@ export function OuijaBoard() {
             </motion.div>
           )}
           </AnimatePresence>
+          <p className="sr-only" aria-live="polite" aria-atomic="true">{announcedAnswer}</p>
 
           {/* Asking indicator */}
           <AnimatePresence>
